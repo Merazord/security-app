@@ -31,11 +31,13 @@ Route::post('/register', [RegisterController::class, 'register'])->name('registe
 Route::get('/activate/{user}', [RegisterController::class, 'activate'])
     ->name('activate');
 
+
 // Resend Activation Email Route
 Route::post('/resend-activation-email', [RegisterController::class, 'resendActivationEmail'])
     ->name('resend.activation.email');
 
-
+Route::get('/resend-activation', [RegisterController::class, 'resendActivationForm'])
+    ->name('resend.activation.form');
 
 Route::middleware('web')->group(function () {
     // Login Routes

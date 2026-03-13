@@ -71,7 +71,9 @@
         @if (session('success'))
             @if (session('email'))
                 <div id="postRegisterButtonContainer" class="mt-3">
-                    <button type="button" id="resendActivation" class="btn btn-link  ">Resend activation email</button>
+                    <a href="{{ route('resend.activation.form') }}" class="btn btn-link">
+                        Resend activation email
+                    </a>
                 </div>
             @endif
         @endif
@@ -85,6 +87,30 @@
 
 
     <script>
+        document.getElementById('password').addEventListener('input', function() {
+            const password = this.value;
+            const errorDiv = document.getElementById('passwordError');
+            const messages = [];
+
+            if (!/[A-Z]/.test(password)) {
+                messages.push('• Debe contener al menos una letra mayúscula');
+            }
+            if (!/[a-z]/.test(password)) {
+                messages.push('• Debe contener al menos una letra minúscula');
+            }
+            if (!/[0-9]/.test(password)) {
+                messages.push('• Debe contener al menos un número');
+            }
+            if (!/[@$!%*#?&.]/.test(password)) {
+                messages.push('• Debe contener al menos un carácter especial (@$!%*#?&.)');
+            }
+            if (password.length < 8) {
+                messages.push('• Debe tener al menos 8 caracteres');
+            }
+
+            errorDiv.innerHTML = messages.join('<br>');
+        });
+
         document.getElementById('registerForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const password = document.getElementById('password').value;
@@ -92,6 +118,11 @@
 
             if (password !== passwordConfirmation) {
                 document.getElementById('passwordError').textContent = 'Las contraseñas no coinciden.';
+                return;
+            }
+
+            const errorDiv = document.getElementById('passwordError');
+            if (errorDiv.innerHTML.trim() !== '') {
                 return;
             }
 
@@ -107,15 +138,12 @@
 
         const resendBtn = document.getElementById('resendActivation');
         if (resendBtn) {
-            document.getElementById('resendActivation').addEventListener('click', function() {
+            resendBtn.addEventListener('click', function() {
                 const email = document.getElementById('email').value;
-
                 if (!email) {
                     alert('Please enter an email address.');
                     return;
                 }
-
-
                 fetch('{{ route('resend.activation.email') }}', {
                         method: 'POST',
                         headers: {
@@ -143,9 +171,7 @@
 <style>
     body {
         background-color: rgb(37, 39, 41);
-        /* Fondo azul */
         color: #333;
-        /* Texto en color oscuro para contraste */
         font-family: Arial, sans-serif;
     }
 

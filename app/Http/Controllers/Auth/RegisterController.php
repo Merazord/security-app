@@ -164,4 +164,9 @@ class RegisterController extends Controller
 
         return response()->json(['message' => 'Activation email successfully resent.'], 200);
     }
+
+    public function resendActivationForm()
+    {
+        return view('auth.resend-activation');
+    }
 }

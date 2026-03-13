@@ -11,7 +11,6 @@
     <div class="container mt-5">
         <h2 class="mb-3">Verification</h2>
 
-        <!-- Mostrar errores generales -->
         @if ($errors->any())
             <div class="alert alert-danger">
                 <ul>
