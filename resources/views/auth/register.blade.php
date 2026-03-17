@@ -13,11 +13,14 @@
 
 <body>
     <div class="container mt-5">
-        <h2 class="mb-3">User Registration</h2>
+        <span class="badge bg-secondary ms-2">
+            {{ env('APP_INSTANCE', 'N/A') }}
+        </span>
+        <h2 class="mb-3">Registro de Usuario</h2>
 
         @if ($errors->any())
             <div class="alert alert-danger">
-                <ul>
+                <ul class="mb-0">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
                     @endforeach
@@ -25,119 +28,194 @@
             </div>
         @endif
 
-
         @if (session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
-        @if (session('error'))
-            <div class="alert alert-danger">{{ session('error') }}</div>
-        @endif
 
-        <form id="registerForm" action="{{ route('register') }}" method="POST">
+        <form id="registerForm" action="{{ route('register') }}" method="POST" novalidate>
             @csrf
-            <div class="mb-3">
-                <label for="name" class="form-label">Name</label>
-                <input type="text" class="form-control" id="name" name="name" required>
-                <div id="nameError" class="text-danger"></div>
-            </div>
-
 
             <div class="mb-3">
-                <label for="email" class="form-label">Email</label>
-                <input type="email" class="form-control" id="email" name="email" required>
-                <div id="emailError" class="text-danger"></div>
-            </div>
-
-            <div class="mb-3">
-                <label for="password" class="form-label">Password (must contain uppercase letters, numbers, and special
-                    characters)</label>
-
-                <input type="password" class="form-control" id="password" name="password" required />
-                <div id="passwordError" class="text-danger"></div>
+                <label for="name" class="form-label">Nombre</label>
+                <input type="text" class="form-control @error('name') is-invalid @enderror" id="name"
+                    name="name" value="{{ old('name') }}" autocomplete="name">
+                <div id="nameError" class="invalid-feedback"></div>
+                @error('name')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                @enderror
             </div>
 
             <div class="mb-3">
-                <label for="password_confirmation" class="form-label">Confirm Password</label>
+                <label for="email" class="form-label">Correo electrónico</label>
+                <input type="email" class="form-control @error('email') is-invalid @enderror" id="email"
+                    name="email" value="{{ old('email') }}" autocomplete="email">
+                <div id="emailError" class="invalid-feedback"></div>
+                @error('email')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="mb-3">
+                <label for="password" class="form-label">
+                    Contraseña <small class="text-muted">(mín. 8 caracteres, mayúscula, número y carácter
+                        especial)</small>
+                </label>
+                <input type="password" class="form-control @error('password') is-invalid @enderror" id="password"
+                    name="password" autocomplete="new-password">
+                <div id="passwordError" class="invalid-feedback"></div>
+                @error('password')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="mb-3">
+                <label for="password_confirmation" class="form-label">Confirmar contraseña</label>
                 <input type="password" class="form-control" id="password_confirmation" name="password_confirmation"
-                    required>
+                    autocomplete="new-password">
+                <div id="confirmError" class="invalid-feedback"></div>
             </div>
+
             <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
 
-
-            <button type="submit" class="btn btn-dark">Register</button>
-
+            <button type="submit" id="submitBtn" class="btn btn-dark">Registrarse</button>
         </form>
 
         @if (session('success'))
-            @if (session('email'))
-                <div id="postRegisterButtonContainer" class="mt-3">
-                    <a href="{{ route('resend.activation.form') }}" class="btn btn-link">
-                        Resend activation email
-                    </a>
-                </div>
-            @endif
+            <div class="mt-3">
+                <a href="{{ route('resend.activation.form') }}" class="btn btn-link">
+                    ¿No recibiste el correo? Reenviar activación
+                </a>
+            </div>
         @endif
+
         <div class="mt-3">
-            <p>Already have an account?<a href="/login" class="btn btn-link">Login here</a></p>
+            <p>¿Ya tienes cuenta? <a href="{{ route('login.form') }}" class="btn btn-link">Inicia sesión aquí</a></p>
         </div>
     </div>
 
-
-    </div>
-
-
     <script>
+        const RECAPTCHA_KEY = '6LcSqoosAAAAAD04LAyD8ciu9m9kB2cvxgOzT5eV';
+
+        const rules = [{
+                test: v => v.length >= 8,
+                msg: '• Mínimo 8 caracteres'
+            },
+            {
+                test: v => /[A-Z]/.test(v),
+                msg: '• Al menos una mayúscula'
+            },
+            {
+                test: v => /[a-z]/.test(v),
+                msg: '• Al menos una minúscula'
+            },
+            {
+                test: v => /[0-9]/.test(v),
+                msg: '• Al menos un número'
+            },
+            {
+                test: v => /[@$!%*#?&.]/.test(v),
+                msg: '• Al menos un carácter especial (@$!%*#?&.)'
+            },
+        ];
+
+        function showFieldError(fieldId, message) {
+            const field = document.getElementById(fieldId);
+            const errDiv = document.getElementById(fieldId.replace('password_confirmation', 'confirm') + 'Error') ||
+                document.getElementById(fieldId + 'Error');
+            if (field) field.classList.add('is-invalid');
+            if (errDiv) errDiv.innerHTML = message;
+        }
+
+        function clearFieldError(fieldId) {
+            const field = document.getElementById(fieldId);
+            const errId = fieldId === 'password_confirmation' ? 'confirmError' : fieldId + 'Error';
+            const errDiv = document.getElementById(errId);
+            if (field) field.classList.remove('is-invalid');
+            if (errDiv) errDiv.innerHTML = '';
+        }
+
+        // Validación en tiempo real de contraseña
         document.getElementById('password').addEventListener('input', function() {
-            const password = this.value;
-            const errorDiv = document.getElementById('passwordError');
-            const messages = [];
+            const val = this.value;
+            const failed = rules.filter(r => !r.test(val)).map(r => r.msg);
+            const errDiv = document.getElementById('passwordError');
+            if (failed.length) {
+                this.classList.add('is-invalid');
+                errDiv.innerHTML = failed.join('<br>');
+            } else {
+                this.classList.remove('is-invalid');
+                errDiv.innerHTML = '';
+            }
+        });
 
-            if (!/[A-Z]/.test(password)) {
-                messages.push('• Debe contener al menos una letra mayúscula');
+        // Validación en tiempo real de confirmación
+        document.getElementById('password_confirmation').addEventListener('input', function() {
+            const pw = document.getElementById('password').value;
+            const errDiv = document.getElementById('confirmError');
+            if (this.value && this.value !== pw) {
+                this.classList.add('is-invalid');
+                errDiv.textContent = 'Las contraseñas no coinciden.';
+            } else {
+                this.classList.remove('is-invalid');
+                errDiv.textContent = '';
             }
-            if (!/[a-z]/.test(password)) {
-                messages.push('• Debe contener al menos una letra minúscula');
-            }
-            if (!/[0-9]/.test(password)) {
-                messages.push('• Debe contener al menos un número');
-            }
-            if (!/[@$!%*#?&.]/.test(password)) {
-                messages.push('• Debe contener al menos un carácter especial (@$!%*#?&.)');
-            }
-            if (password.length < 8) {
-                messages.push('• Debe tener al menos 8 caracteres');
-            }
-
-            errorDiv.innerHTML = messages.join('<br>');
         });
 
         document.getElementById('registerForm').addEventListener('submit', function(e) {
             e.preventDefault();
+
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
-            const passwordConfirmation = document.getElementById('password_confirmation').value;
+            const confirm = document.getElementById('password_confirmation').value;
+            let valid = true;
 
-            if (password !== passwordConfirmation) {
-                document.getElementById('passwordError').textContent = 'Las contraseñas no coinciden.';
-                return;
+            ['name', 'email', 'password'].forEach(clearFieldError);
+            document.getElementById('password_confirmation').classList.remove('is-invalid');
+            document.getElementById('confirmError').textContent = '';
+
+            if (!name) {
+                showFieldError('name', 'El nombre es obligatorio.');
+                valid = false;
             }
 
-            const errorDiv = document.getElementById('passwordError');
-            if (errorDiv.innerHTML.trim() !== '') {
-                return;
+            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showFieldError('email', 'Ingresa un correo electrónico válido.');
+                valid = false;
             }
+
+            const failedRules = rules.filter(r => !r.test(password));
+            if (failedRules.length) {
+                showFieldError('password', failedRules.map(r => r.msg).join('<br>'));
+                valid = false;
+            }
+
+            if (password !== confirm) {
+                document.getElementById('password_confirmation').classList.add('is-invalid');
+                document.getElementById('confirmError').textContent = 'Las contraseñas no coinciden.';
+                valid = false;
+            }
+
+            if (!valid) return;
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = 'Registrando...';
 
             grecaptcha.enterprise.ready(function() {
-                grecaptcha.enterprise.execute('6LcSqoosAAAAAD04LAyD8ciu9m9kB2cvxgOzT5eV', {
+                grecaptcha.enterprise.execute(RECAPTCHA_KEY, {
                     action: 'submit'
                 }).then(function(token) {
                     document.getElementById('g-recaptcha-response').value = token;
                     document.getElementById('registerForm').submit();
+                }).catch(function() {
+                    btn.disabled = false;
+                    btn.textContent = 'Registrarse';
+                    alert('Error al validar reCAPTCHA. Intente de nuevo.');
                 });
             });
         });
     </script>
-
-
 </body>
 
 <style>
@@ -149,7 +227,7 @@
 
     .container {
         max-width: 500px;
-        background-color: rgb(255, 255, 255);
+        background-color: #fff;
         padding: 30px;
         border-radius: 10px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);

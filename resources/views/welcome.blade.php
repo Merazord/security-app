@@ -9,9 +9,6 @@
 
     <!-- Fonts -->
     <link href="https://fonts.bunny.net/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://www.google.com/recaptcha/enterprise.js?render=6LcSqoosAAAAAD04LAyD8ciu9m9kB2cvxgOzT5eV" async
-        defer></script>
-
 
     <!-- Styles -->
     <style>
@@ -396,6 +393,9 @@
 <body class="antialiased">
     <div
         class="relative flex items-top justify-center min-h-screen bg-gray-100 dark:bg-gray-900 sm:items-center py-4 sm:pt-0">
+        <h1 class="badge bg-secondary ms-2">
+            {{ env('APP_INSTANCE', 'N/A') }}
+        </h1>
         @if (Route::has('login'))
             <div class="hidden fixed top-0 right-0 px-6 py-4 sm:block">
                 @auth
