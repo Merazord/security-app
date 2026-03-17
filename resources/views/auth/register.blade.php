@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Registro</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://www.google.com/recaptcha/enterprise.js?render=6LdY5usqAAAAAMcGtth93FEay2BoxiVV3Qsw7yXJ" async
+    <script src="https://www.google.com/recaptcha/enterprise.js?render=6LcSqoosAAAAAD04LAyD8ciu9m9kB2cvxgOzT5eV" async
         defer></script>
 </head>
 
@@ -127,7 +127,7 @@
             }
 
             grecaptcha.enterprise.ready(function() {
-                grecaptcha.enterprise.execute('6LdY5usqAAAAAMcGtth93FEay2BoxiVV3Qsw7yXJ', {
+                grecaptcha.enterprise.execute('6LcSqoosAAAAAD04LAyD8ciu9m9kB2cvxgOzT5eV', {
                     action: 'submit'
                 }).then(function(token) {
                     document.getElementById('g-recaptcha-response').value = token;
@@ -135,34 +135,6 @@
                 });
             });
         });
-
-        const resendBtn = document.getElementById('resendActivation');
-        if (resendBtn) {
-            resendBtn.addEventListener('click', function() {
-                const email = document.getElementById('email').value;
-                if (!email) {
-                    alert('Please enter an email address.');
-                    return;
-                }
-                fetch('{{ route('resend.activation.email') }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                        },
-                        body: JSON.stringify({
-                            email: email
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        alert(data.message);
-                    })
-                    .catch(error => {
-                        alert('An error occurred while resending the activation email.');
-                    });
-            });
-        }
     </script>
 
 
