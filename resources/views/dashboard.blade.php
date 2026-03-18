@@ -11,7 +11,7 @@
             </div>
         @endif
         <span class="badge bg-secondary ms-2">
-            {{ env('APP_INSTANCE', 'N/A') }}
+            {{ config('app.instance', 'N/A') }}
         </span>
         <h1 class="text-center mb-2">¡Bienvenido, {{ auth()->user()->name }}!</h1>
         <p class="lead text-center text-muted">Este es tu panel de control.</p>

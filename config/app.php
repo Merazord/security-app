@@ -185,4 +185,5 @@ return [
         // 'Example' => App\Facades\Example::class,
     ])->toArray(),
 
+    'instance' => env('APP_INSTANCE', 'N/A'),
 ];

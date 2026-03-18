@@ -14,7 +14,7 @@
 <body>
     <div class="container mt-5">
         <span class="badge bg-secondary ms-2">
-            {{ env('APP_INSTANCE', 'N/A') }}
+            {{ config('app.instance', 'N/A') }}
         </span>
         <h2 class="mb-3">Iniciar Sesión</h2>
 
